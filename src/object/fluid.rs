@@ -182,6 +182,25 @@ impl<N: RealField> Fluid<N> {
             N::one() / (self.volumes[i] * self.density0)
         }
     }
+
+    /// Get the size of this fluid in bytes
+    pub fn size_in_bytes(&self) -> usize {
+        self.vector_size_point(&self.positions)
+        + self.vector_size_vector(&self.accelerations)
+        // + self.vector_size(&self.nonpressure_forces)
+        + self.vector_size_vector(&self.velocities) * 2
+    }
+
+    /// Get the size of a vector in bytes
+    fn vector_size_point(&self, vector: &Vec<Point<N>>) -> usize {
+        std::mem::size_of_val(&vector[0]) * vector.len()
+    }
+
+    /// Get the size of a vector in bytes
+    fn vector_size_vector(&self, vector: &Vec<Vector<N>>) -> usize {
+        std::mem::size_of_val(&vector[0]) * vector.len()
+    }
+    
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
