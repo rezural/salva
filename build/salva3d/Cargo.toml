@@ -12,7 +12,7 @@ license = "Apache-2.0"
 edition = "2018"
 
 [features]
-default = [ "dim3" ]
+default = [ "dim3", "parallel" ]
 dim3    = [ ]
 parallel = [ "rayon" ]
 nphysics = [ "ncollide3d", "nphysics3d" ]
@@ -34,3 +34,4 @@ rayon = { version = "1.0", optional = true }
 ncollide3d = { version = "0.23", optional = true }
 nphysics3d = { version = "0.16", optional = true }
 
+byte-unit = "4.0.9"
