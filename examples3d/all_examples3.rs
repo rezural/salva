@@ -14,6 +14,7 @@ mod custom_forces3;
 mod elasticity3;
 mod faucet3;
 mod surface_tension3;
+mod wavepool;
 
 fn demo_name_from_command_line() -> Option<String> {
     let mut args = std::env::args();
@@ -50,11 +51,12 @@ fn main() {
         .to_camel_case();
 
     let mut builders: Vec<(_, fn(&mut Testbed))> = vec![
-        ("Basic", basic3::init_world),
-        ("Custom forces", custom_forces3::init_world),
-        ("Elasticity", elasticity3::init_world),
-        ("Faucet", faucet3::init_world),
-        ("Surface tension", surface_tension3::init_world),
+        ("wavepool", wavepool::init_world),
+        // ("Basic", basic3::init_world),
+        // ("Custom forces", custom_forces3::init_world),
+        // ("Elasticity", elasticity3::init_world),
+        // ("Faucet", faucet3::init_world),
+        // ("Surface tension", surface_tension3::init_world),
     ];
 
     builders.sort_by_key(|builder| builder.0);
