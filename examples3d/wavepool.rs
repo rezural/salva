@@ -22,10 +22,12 @@ mod helper;
 pub fn init_world(testbed: &mut Testbed) {
 
     // Fluid sim world dimensions
-    let (width, height, depth, particle_radius) = (100.0, 15.0, 100.0, 1.0/2.0);
+    let (width, height, depth, particle_radius) = (100.0, 15.0, 100.0, 1.0/8.0);
 
     let subdivs = ((width/particle_radius) as i32, (height/particle_radius) as i32, (depth/particle_radius) as i32);
 
+    println!("{{\"width\": {}, \"height\": {}, \"depth\": {},\"particle_radius\": {},\"subdivs\": [{},{},{}]}}",
+        width, height, depth, particle_radius, subdivs.0, subdivs.1, subdivs.2);
     println!("(w, h, d, n): {} {} {} {}", subdivs.0, subdivs.1, subdivs.2, subdivs.0 * subdivs.1 * subdivs.2);
 
     /*
@@ -140,6 +142,7 @@ pub fn init_world(testbed: &mut Testbed) {
     let mut last_t = 0.0;
 
     testbed.add_callback_with_fluids(move |liquid_world, _, _, _, _, _, _, t| {
+        println!("Done frame");
         let fluid = liquid_world.fluids_mut().get_mut(fluid_handle).unwrap();
 
         for i in 0..fluid.num_particles() {
