@@ -18,8 +18,6 @@ use std::f32;
 use std::fs::File;
 use std::io::Write;
 use std::path;
-
-use serde_json;
 #[path = "./helper.rs"]
 mod helper;
 
@@ -286,6 +284,9 @@ fn output_positions_to_file(collection: &Vec<Point3<f32>>, to_file: &path::PathB
 }
 
 fn main() {
+    let threads = rayon::ThreadPoolBuilder::new();
+    let rar = threads.num_threads(16).build_global().unwrap();
+    // println!("Number of threads {}")
     let testbed = Testbed::from_builders(0, vec![("Wavepool", init_world)]);
 
     testbed.run()
