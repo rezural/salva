@@ -15,14 +15,18 @@ use salva3d::object::{Boundary, Fluid};
 use salva3d::solver::{DFSPHSolver, ArtificialViscosity, XSPHViscosity, Akinci2013SurfaceTension};
 use salva3d::LiquidWorld;
 use std::f32;
+use std::fs::File;
+use std::io::Write;
+use std::path;
 
+use serde_json;
 #[path = "./helper.rs"]
 mod helper;
 
 pub fn init_world(testbed: &mut Testbed) {
 
     // Fluid sim world dimensions
-    let (width, height, depth, particle_radius) = (100.0, 15.0, 100.0, 1.0/8.0);
+    let (width, height, depth, particle_radius) = (100.0, 15.0, 100.0, 1.0 / 3.0);
 
     let subdivs = ((width/particle_radius) as i32, (height/particle_radius) as i32, (depth/particle_radius) as i32);
 
@@ -140,9 +144,14 @@ pub fn init_world(testbed: &mut Testbed) {
 
     // Callback that will be executed on the main loop to generate new particles every second.
     let mut last_t = 0.0;
+    let mut simulation_step = 0;
 
-    testbed.add_callback_with_fluids(move |liquid_world, _, _, _, _, _, _, t| {
-        println!("Done frame");
+    testbed.add_callback_with_fluids(move |liquid_world: & mut LiquidWorld<f32>, _, _, _, _, _, _, t| {
+        // println!("{:?}", liquid_world.fluids().values().next().unwrap().positions.len());
+        let state_save_path = path::PathBuf::from(String::from("./runs/test"));
+        save_state(&state_save_path, liquid_world, simulation_step);
+        simulation_step = simulation_step + 1;
+        
         let fluid = liquid_world.fluids_mut().get_mut(fluid_handle).unwrap();
 
         for i in 0..fluid.num_particles() {
@@ -195,6 +204,85 @@ pub fn init_world(testbed: &mut Testbed) {
     testbed.set_fluid_rendering_mode(FluidRenderingMode::VelocityColor { min: 0.0, max: 5.0 });
     testbed.mechanical_world_mut().set_timestep(1.0 / 200.0);
     testbed.look_at(Point3::new(120.0, 50.0, 120.0), Point3::origin());
+}
+
+fn save_state(container_dir: &std::path::PathBuf, fluid: &LiquidWorld<f32>, simulation_step: u64) {
+
+    let body_to_save = fluid.fluids().values().next().unwrap();
+    save_particles(container_dir, body_to_save, simulation_step);
+    save_velocities(container_dir, body_to_save, simulation_step);
+    save_accelerations(container_dir, body_to_save, simulation_step);
+}
+
+fn save_accelerations(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step: u64) {
+    let file_name = output_dir.clone().join("accelerations").join(format!("{}", simulation_step));
+    println!("\"accelerations_path\" = \"{}\",\n", file_name.as_path().to_str().unwrap());
+
+    output_accelerations_to_file(&fluid.accelerations, &file_name);
+
+}
+
+fn output_accelerations_to_file(collection: &Vec<na::Matrix<f32, na::U3, na::U1, na::ArrayStorage<f32, na::U3, na::U1>>>, to_file: &path::PathBuf) {
+    let mut file: File = File::create(to_file).unwrap();
+    file.write("[".as_bytes()).ok();
+    for (index, matrix) in collection.into_iter().enumerate() {
+        let serialized = serde_json::to_string(&matrix).unwrap();
+        
+        file.write(serialized.as_bytes()).ok();
+        if index < collection.len() - 1 {
+            file.write(",\n".as_bytes()).ok();
+        }
+    }
+    file.write("]".as_bytes()).ok();
+    file.flush().ok();
+}
+
+fn save_velocities(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step: u64) {
+    let file_name = output_dir.clone().join("velocities").join(format!("{}", simulation_step));
+    println!("\"velocities_path\" = \"{}\",\n", file_name.as_path().to_str().unwrap());
+
+    output_velocities_to_file(&fluid.velocities, &file_name);
+
+}
+
+fn output_velocities_to_file(collection: &Vec<na::Matrix<f32, na::U3, na::U1, na::ArrayStorage<f32, na::U3, na::U1>>>, to_file: &path::PathBuf) {
+    let mut file: File = File::create(to_file).unwrap();
+    file.write("[".as_bytes()).ok();
+    for (index, matrix) in collection.into_iter().enumerate() {
+        let serialized = serde_json::to_string(&matrix).unwrap();
+        
+        file.write(serialized.as_bytes()).ok();
+        if index < collection.len() - 1 {
+            file.write(",\n".as_bytes()).ok();
+        }
+    }
+    file.write("]".as_bytes()).ok();
+    file.flush().ok();
+}
+
+fn save_particles(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step: u64) {
+    let file_name = output_dir.clone().join("particles").join(format!("{}", simulation_step));
+    println!("\"particles_path\" = \"{}\",\n", file_name.as_path().to_str().unwrap());
+
+    output_positions_to_file(&fluid.positions, &file_name);
+}
+
+fn output_positions_to_file(collection: &Vec<Point3<f32>>, to_file: &path::PathBuf) {
+    let mut file: File = File::create(to_file).unwrap();
+    file.write("[".as_bytes()).ok();
+    for (index, point) in collection.into_iter().enumerate() {
+        let serialized = serde_json::to_string(&point).unwrap();
+        
+        file.write(serialized.as_bytes()).ok();
+        if index < collection.len() - 1 {
+            file.write(",\n".as_bytes()).ok();
+        }
+    }
+    file.write("]".as_bytes()).ok();
+    file.flush().ok();
+
+
+
 }
 
 fn main() {
