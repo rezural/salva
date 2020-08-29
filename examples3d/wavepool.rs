@@ -224,16 +224,16 @@ fn save_accelerations(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_st
 
 fn output_accelerations_to_file(collection: &Vec<na::Matrix<f32, na::U3, na::U1, na::ArrayStorage<f32, na::U3, na::U1>>>, to_file: &path::PathBuf) {
     let mut file: File = File::create(to_file).unwrap();
-    file.write("[".as_bytes()).ok();
+    // file.write("[".as_bytes()).ok();
     for (index, matrix) in collection.into_iter().enumerate() {
-        let serialized = serde_json::to_string(&matrix).unwrap();
+        let serialized = bincode::serialize(&matrix).unwrap();
         
-        file.write(serialized.as_bytes()).ok();
+        file.write(&serialized).ok();
         if index < collection.len() - 1 {
-            file.write(",\n".as_bytes()).ok();
+            // file.write(",\n".as_bytes()).ok();
         }
     }
-    file.write("]".as_bytes()).ok();
+    // file.write("]".as_bytes()).ok();
     file.flush().ok();
 }
 
@@ -247,16 +247,16 @@ fn save_velocities(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step:
 
 fn output_velocities_to_file(collection: &Vec<na::Matrix<f32, na::U3, na::U1, na::ArrayStorage<f32, na::U3, na::U1>>>, to_file: &path::PathBuf) {
     let mut file: File = File::create(to_file).unwrap();
-    file.write("[".as_bytes()).ok();
+    // file.write("[".as_bytes()).ok();
     for (index, matrix) in collection.into_iter().enumerate() {
-        let serialized = serde_json::to_string(&matrix).unwrap();
+        let serialized = bincode::serialize(&matrix).unwrap();
         
-        file.write(serialized.as_bytes()).ok();
+        file.write(&serialized).ok();
         if index < collection.len() - 1 {
             file.write(",\n".as_bytes()).ok();
         }
     }
-    file.write("]".as_bytes()).ok();
+    // file.write("]".as_bytes()).ok();
     file.flush().ok();
 }
 
@@ -269,16 +269,16 @@ fn save_particles(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step: 
 
 fn output_positions_to_file(collection: &Vec<Point3<f32>>, to_file: &path::PathBuf) {
     let mut file: File = File::create(to_file).unwrap();
-    file.write("[".as_bytes()).ok();
+    // file.write("[".as_bytes()).ok();
     for (index, point) in collection.into_iter().enumerate() {
-        let serialized = serde_json::to_string(&point).unwrap();
+        let serialized = bincode::serialize(&point).unwrap();
         
-        file.write(serialized.as_bytes()).ok();
+        file.write(&serialized).ok();
         if index < collection.len() - 1 {
             file.write(",\n".as_bytes()).ok();
         }
     }
-    file.write("]".as_bytes()).ok();
+    // file.write("]".as_bytes()).ok();
     file.flush().ok();
 
 
