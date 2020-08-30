@@ -1,0 +1,14 @@
+#!/usr/bin/env  ruby
+
+require 'pry' 
+
+input_file = ARGV[0]
+output_file = ARGV[1]
+div_by = ARGV[2].to_i
+
+div_by = 1.0/2.0**div_by
+# puts "#dividing by #{div_by}"
+
+cmd = "ffmpeg -i #{input_file} -filter:v \"setpts=#{div_by}*PTS\" #{output_file}"
+
+puts "#{cmd}"

@@ -1,0 +1,21 @@
+#!/usr/bin/env  ruby
+
+require 'pry' 
+
+dir = ARGV[0]
+output_file = ARGV[1]
+
+input_files = Dir["#{dir}/*.mp4"]
+
+files = input_files.map do |file|
+  file = File.new(file)
+end
+
+files = files.sort{|a, b| File.basename(a.path) <=> File.basename(b.path)}
+
+output_file_list = files.map {|file| "file '../#{file.path}'" }.join("\n")
+
+IO.write("tmp/concatenate-list.txt", output_file_list)
+
+puts "ffmpeg -f concat -safe 0 -i tmp/concatenate-list.txt -c copy #{output_file}"
+# binding.pry
