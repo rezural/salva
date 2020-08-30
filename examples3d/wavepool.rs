@@ -18,6 +18,7 @@ use std::f32;
 use std::fs::File;
 use std::io::Write;
 use std::path;
+use std::time::{Duration, Instant};
 
 use serde_json;
 #[path = "./helper.rs"]
@@ -26,7 +27,7 @@ mod helper;
 pub fn init_world(testbed: &mut Testbed) {
 
     // Fluid sim world dimensions
-    let (width, height, depth, particle_radius) = (100.0, 15.0, 100.0, 1.0 / 4.0);
+    let (width, height, depth, particle_radius) = (100.0, 15.0, 100.0, 1.0 / 3.0);
 
     let subdivs = ((width/particle_radius) as i32, (height/particle_radius) as i32, (depth/particle_radius) as i32);
 
@@ -142,6 +143,10 @@ pub fn init_world(testbed: &mut Testbed) {
     let mut simulation_step = 0;
     let mut done_first = false;
 
+    let mut wall_times: Vec<Instant> = Vec::new();
+    wall_times.push(Instant::now());
+
+
     testbed.add_callback_with_fluids(move |liquid_world: & mut LiquidWorld<f32>, _, _, _, _, _, _, t| {
         // println!("{:?}", liquid_world.fluids().values().next().unwrap().positions.len());
         // let sttate_save_path = path::PathBuf::from(String::from("./runs/test"));
@@ -151,7 +156,11 @@ pub fn init_world(testbed: &mut Testbed) {
         
         let fluid = liquid_world.fluids_mut().get_mut(fluid_handle).unwrap();
 
-        println!("{}", t);
+        let last_wall_time = wall_times.last().unwrap();
+        let duration = last_wall_time.elapsed();
+        wall_times.push(Instant::now());
+
+        println!("{{\"duration: \"{:?}\"}},", duration);
         if !done_first {
           if t > 0.1 {
               done_first = true;
