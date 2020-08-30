@@ -30,7 +30,7 @@ mod helper;
 pub fn init_world(testbed: &mut Testbed) {
 
     // Fluid sim world dimensions
-    let (width, height, depth, particle_radius) = (100.0, 15.0, 100.0, 1.0 / 8.0);
+    let (width, height, depth, particle_radius) = (100.0, 8.0, 100.0, 1.0 / 6.0);
 
     let subdivs = ((width/particle_radius) as i32, (height/particle_radius) as i32, (depth/particle_radius) as i32);
 
@@ -75,7 +75,7 @@ pub fn init_world(testbed: &mut Testbed) {
         0.0,
     ));
 
-    println!("size: {}", fluid.size_in_bytes());
+    // println!("size: {}", fluid.size_in_bytes());
 
     let viscosity = XSPHViscosity::new(0.05, 0.05);
     fluid.nonpressure_forces.push(Box::new(viscosity));
@@ -149,6 +149,7 @@ pub fn init_world(testbed: &mut Testbed) {
     let state_save_path = path::PathBuf::from(format!("./runs/{}", run_uuid));
     // FIXME THis shouldnt be ok(); It should die gracefully
     fs::create_dir_all(&state_save_path).ok();
+    fs::create_dir_all(&state_save_path.join("particles")).ok();
 
     println!("{{\"created_run_dir\": \"{}\"}}", state_save_path.as_path().to_str().unwrap());
 
@@ -220,49 +221,6 @@ fn save_state(container_dir: &std::path::PathBuf, fluid: &LiquidWorld<f32>, simu
     // save_accelerations(container_dir, body_to_save, simulation_step);
 }
 
-fn save_accelerations(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step: u64) {
-    let file_name = output_dir.clone().join("accelerations").join(format!("{}", simulation_step));
-    println!("\"accelerations_path\" = \"{}\",\n", file_name.as_path().to_str().unwrap());
-
-    output_accelerations_to_file(&fluid.accelerations, &file_name);
-
-}
-
-fn output_accelerations_to_file(collection: &Vec<na::Matrix<f32, na::U3, na::U1, na::ArrayStorage<f32, na::U3, na::U1>>>, to_file: &path::PathBuf) {
-    let mut file: File = File::create(to_file).unwrap();
-    for (index, matrix) in collection.into_iter().enumerate() {
-        let serialized = serde_json::to_string(&matrix).unwrap();
-        
-        file.write(serialized.as_bytes()).ok();
-        if index < collection.len() - 1 {
-            file.write(",\n".as_bytes()).ok();
-        }
-    }
-    println!("flushing");
-    file.flush().ok();
-    println!("done");
-}
-
-fn save_velocities(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step: u64) {
-    let file_name = output_dir.clone().join("velocities").join(format!("{}", simulation_step));
-    println!("\"velocities_path\" = \"{}\",\n", file_name.as_path().to_str().unwrap());
-
-    output_velocities_to_file(&fluid.velocities, &file_name);
-
-}
-
-fn output_velocities_to_file(collection: &Vec<na::Matrix<f32, na::U3, na::U1, na::ArrayStorage<f32, na::U3, na::U1>>>, to_file: &path::PathBuf) {
-    let mut file: File = File::create(to_file).unwrap();
-    for (index, matrix) in collection.into_iter().enumerate() {
-        let serialized = serde_json::to_string(&matrix).unwrap();
-        
-        file.write(serialized.as_bytes()).ok();
-        if index < collection.len() - 1 {
-            file.write(",\n".as_bytes()).ok();
-        }
-    }
-    file.flush().ok();
-}
 
 fn save_particles(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step: u64) {
     let file_name = output_dir.clone().join("particles").join(format!("particles-{}.particles", simulation_step));
@@ -287,3 +245,47 @@ fn main() {
 
     testbed.run()
 }
+
+// fn save_accelerations(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step: u64) {
+//     let file_name = output_dir.clone().join("accelerations").join(format!("{}", simulation_step));
+//     println!("\"accelerations_path\" = \"{}\",\n", file_name.as_path().to_str().unwrap());
+
+//     output_accelerations_to_file(&fluid.accelerations, &file_name);
+
+// }
+
+// fn output_accelerations_to_file(collection: &Vec<na::Matrix<f32, na::U3, na::U1, na::ArrayStorage<f32, na::U3, na::U1>>>, to_file: &path::PathBuf) {
+//     let mut file: File = File::create(to_file).unwrap();
+//     for (index, matrix) in collection.into_iter().enumerate() {
+//         let serialized = serde_json::to_string(&matrix).unwrap();
+        
+//         file.write(serialized.as_bytes()).ok();
+//         if index < collection.len() - 1 {
+//             file.write(",\n".as_bytes()).ok();
+//         }
+//     }
+//     println!("flushing");
+//     file.flush().ok();
+//     println!("done");
+// }
+
+// fn save_velocities(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step: u64) {
+//     let file_name = output_dir.clone().join("velocities").join(format!("{}", simulation_step));
+//     println!("\"velocities_path\" = \"{}\",\n", file_name.as_path().to_str().unwrap());
+
+//     output_velocities_to_file(&fluid.velocities, &file_name);
+
+// }
+
+// fn output_velocities_to_file(collection: &Vec<na::Matrix<f32, na::U3, na::U1, na::ArrayStorage<f32, na::U3, na::U1>>>, to_file: &path::PathBuf) {
+//     let mut file: File = File::create(to_file).unwrap();
+//     for (index, matrix) in collection.into_iter().enumerate() {
+//         let serialized = serde_json::to_string(&matrix).unwrap();
+        
+//         file.write(serialized.as_bytes()).ok();
+//         if index < collection.len() - 1 {
+//             file.write(",\n".as_bytes()).ok();
+//         }
+//     }
+//     file.flush().ok();
+// }
