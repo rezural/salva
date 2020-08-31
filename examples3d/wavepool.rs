@@ -23,7 +23,6 @@ use uuid::Uuid;
 
 use std::fs;
 
-use serde_json;
 #[path = "./helper.rs"]
 mod helper;
 
@@ -81,7 +80,7 @@ pub fn init_world(testbed: &mut Testbed) {
     fluid.nonpressure_forces.push(Box::new(viscosity));
 
     let tension = Akinci2013SurfaceTension::new(0.1, 1.0);
-    fluid.nonpressure_forces.push(Box::new(tension));
+    fluid.nonpressure_forces.push(Box::new(tension));`
 
     let fluid_handle = liquid_world.add_fluid(fluid);
     testbed.set_fluid_color(fluid_handle, Point3::new(0.8, 0.7, 1.0));
@@ -217,8 +216,31 @@ fn save_state(container_dir: &std::path::PathBuf, fluid: &LiquidWorld<f32>, simu
 
     let body_to_save = fluid.fluids().values().next().unwrap();
     save_particles(container_dir, body_to_save, simulation_step);
+    save_particles_gltf(container_dir, body_to_save, simulation_step) {
+
+    }
     // save_velocities(container_dir, body_to_save, simulation_step);
     // save_accelerations(container_dir, body_to_save, simulation_step);
+}
+
+fn save_particles_gltf(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step: u64) {
+    let file_name = output_dir.clone().join("particles").join(format!("particles-{}.gltf", simulation_step));
+    println!("\"particles_path\" = \"{}\",\n", file_name.as_path().to_str().unwrap());
+
+    // let accelerations_scalar = &fluid.a
+    let mut scalars = Vec::new();
+    output_positions_to_file(&fluid.positions, scalars, &file_name);
+}
+
+fn output_positions_to_file_gltf(collection: &Vec<Point3<f32>>, scalars: Vec<f32>, to_file: &path::PathBuf) {
+    let mut file: File = File::create(to_file).unwrap();
+    for point in collection {
+        let serialized = format!("{:?},{:?},{:?}\n", point.coords.get(0).unwrap(), point.coords.get(1).unwrap(), point.coords.get(2).unwrap() );
+        
+        file.write(serialized.as_bytes()).ok();
+    }
+    file.flush().ok();
+
 }
 
 
@@ -226,10 +248,12 @@ fn save_particles(output_dir: &path::Path, fluid: &Fluid<f32>, simulation_step: 
     let file_name = output_dir.clone().join("particles").join(format!("particles-{}.particles", simulation_step));
     println!("\"particles_path\" = \"{}\",\n", file_name.as_path().to_str().unwrap());
 
-    output_positions_to_file(&fluid.positions, &file_name);
+    // let accelerations_scalar = &fluid.a
+    let mut scalars = Vec::new();
+    output_positions_to_file(&fluid.positions, scalars, &file_name);
 }
 
-fn output_positions_to_file(collection: &Vec<Point3<f32>>, to_file: &path::PathBuf) {
+fn output_positions_to_file(collection: &Vec<Point3<f32>>, scalars: Vec<f32>, to_file: &path::PathBuf) {
     let mut file: File = File::create(to_file).unwrap();
     for point in collection {
         let serialized = format!("{:?},{:?},{:?}\n", point.coords.get(0).unwrap(), point.coords.get(1).unwrap(), point.coords.get(2).unwrap() );
