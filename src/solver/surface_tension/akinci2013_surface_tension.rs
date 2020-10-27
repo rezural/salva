@@ -2,15 +2,15 @@
 use rayon::prelude::*;
 
 use na::{self, RealField, Unit};
-
 use crate::geometry::ParticlesContacts;
+use serde::{Serialize, Deserialize};
 
 use crate::math::Vector;
 use crate::object::{Boundary, Fluid};
 use crate::solver::NonPressureForce;
 use crate::TimestepManager;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 /// Surface tension method introduced by Akinci et al. 2013
 ///
 /// This combines both cohesion forces as well as curvature minimization forces.
@@ -18,6 +18,7 @@ use crate::TimestepManager;
 pub struct Akinci2013SurfaceTension<N: RealField> {
     fluid_tension_coefficient: N,
     boundary_adhesion_coefficient: N,
+    #[serde(skip_serializing, skip_deserializing)]
     normals: Vec<Vector<N>>,
 }
 

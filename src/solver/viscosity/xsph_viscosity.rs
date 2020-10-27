@@ -2,6 +2,7 @@
 use rayon::prelude::*;
 
 use na::{self, RealField};
+use serde::{Serialize, Deserialize};
 
 use crate::geometry::ParticlesContacts;
 
@@ -10,7 +11,7 @@ use crate::object::{Boundary, Fluid};
 use crate::solver::NonPressureForce;
 use crate::TimestepManager;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 /// Implements the viscosity model introduced with the XSPH method.
 pub struct XSPHViscosity<N: RealField> {
     /// The viscosity coefficient when interacting with boundaries.
