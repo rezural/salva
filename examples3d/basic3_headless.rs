@@ -187,11 +187,82 @@ pub fn init_and_run() {
             &mut physics.bodies,
         );
 
+        let fluid = fluids_pipeline
+            .liquid_world
+            .fluids()
+            .get(fluid_handle)
+            .unwrap();
+        
+        let output_file = String::from(format!("{:05}.ply", step));
+        let output_file = path::PathBuf::from(output_file);
+        output_particles_to_file(&fluid, &output_file);
+        
         step += 1;
     }
 
 }
 
+fn output_particles_to_file(fluid: &Fluid, to_file: &path::PathBuf) {
+    let mut file: File = File::create(to_file).unwrap();
+    let mut buf = Vec::<u8>::new();
+
+    let mut ply = create_ply();
+
+    let points = fluid
+        .positions
+        .iter()
+        .enumerate()
+        .map(|(i, particle)| {
+            let mut point = DefaultElement::new();
+            let velocity = fluid.velocities[i];
+
+            //first frame will not have velocities
+            let velocity = if velocity.x == 0. {
+                velocity
+            } else {
+                Vector3::from(velocity)
+            };
+            
+            point.insert("x".to_string(), Property::Float(particle.x));
+            point.insert("y".to_string(), Property::Float(particle.y));
+            point.insert("z".to_string(), Property::Float(particle.z));
+            point.insert("nx".to_string(), Property::Float(velocity.x));
+            point.insert("ny".to_string(), Property::Float(velocity.y));
+            point.insert("nz".to_string(), Property::Float(velocity.z));
+            point
+        })
+        .collect();
+
+    ply.payload.insert("vertex".to_string(), points);
+
+    let w = Writer::new();
+    let _written = w.write_ply(&mut buf, &mut ply).unwrap();
+
+    file.write_all(&buf);
+
+}
+
+fn create_ply() -> Ply<DefaultElement> {
+    let mut ply = Ply::<DefaultElement>::new();
+    ply.header.encoding = Encoding::Ascii;
+    ply.header.comments.push("A beautiful comment!".to_string());
+    let mut point_element = ElementDef::new("vertex".to_string());
+    let p = PropertyDef::new("x".to_string(), PropertyType::Scalar(ScalarType::Float));
+    point_element.properties.add(p);
+    let p = PropertyDef::new("y".to_string(), PropertyType::Scalar(ScalarType::Float));
+    point_element.properties.add(p);
+    let p = PropertyDef::new("z".to_string(), PropertyType::Scalar(ScalarType::Float));
+    point_element.properties.add(p);
+    let p = PropertyDef::new("nx".to_string(), PropertyType::Scalar(ScalarType::Float));
+    point_element.properties.add(p);
+    let p = PropertyDef::new("ny".to_string(), PropertyType::Scalar(ScalarType::Float));
+    point_element.properties.add(p);
+    let p = PropertyDef::new("nz".to_string(), PropertyType::Scalar(ScalarType::Float));
+    point_element.properties.add(p);
+    ply.header.elements.add(point_element);
+
+    ply
+}
 fn main() {
     init_and_run();
 }
