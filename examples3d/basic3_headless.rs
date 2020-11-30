@@ -193,7 +193,7 @@ pub fn init_and_run() {
             .get(fluid_handle)
             .unwrap();
         
-        let output_file = String::from(format!("{:05}.ply", step));
+        let output_file = String::from(format!("particles-{:05}.ply", step));
         let output_file = path::PathBuf::from(output_file);
         output_particles_to_file(&fluid, &output_file);
         
