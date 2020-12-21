@@ -12,6 +12,7 @@ use rapier_testbed3d::Testbed;
 mod basic3;
 mod custom_forces3;
 mod elasticity3;
+mod heightfield;
 mod faucet3;
 mod surface_tension3;
 
@@ -55,6 +56,7 @@ fn main() {
         ("Elasticity", elasticity3::init_world),
         ("Faucet", faucet3::init_world),
         ("Surface tension", surface_tension3::init_world),
+        ("Heightfield", heightfield::init_world),
     ];
 
     builders.sort_by_key(|builder| builder.0);
