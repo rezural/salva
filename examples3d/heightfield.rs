@@ -14,7 +14,7 @@ use nalgebra::{ComplexField, Translation3, DMatrix};
 #[path = "./helper.rs"]
 mod helper;
 
-const PARTICLE_RADIUS: f32 = 0.1;
+const PARTICLE_RADIUS: f32 = 0.06;
 const SMOOTHING_FACTOR: f32 = 2.0;
 
 pub fn init_world(testbed: &mut Testbed) {
@@ -28,7 +28,7 @@ pub fn init_world(testbed: &mut Testbed) {
     let mut fluids_pipeline = FluidsPipeline::new(PARTICLE_RADIUS, SMOOTHING_FACTOR);
 
     let ground_size = Vector3::new(10., 1., 10.);
-    let wall_height = 1.;
+    let wall_height = 0.2;
     let (ground_handle, ground_shape) = create_ground(
         ground_size,
         wall_height,
@@ -36,7 +36,7 @@ pub fn init_world(testbed: &mut Testbed) {
         &mut bodies,
         &mut colliders);
 
-    let fluid_depth = 4.;
+    let fluid_depth = 2.;
     let raycast_from = Point3::new(0., wall_height, 0.);
     let fluid_particles = create_fluid_above_ground(
         ground_size.x - PARTICLE_RADIUS * 6.,
@@ -118,7 +118,7 @@ pub fn create_ground(
     colliders: &mut ColliderSet,
 ) -> (RigidBodyHandle, ColliderShape) {
 
-    let subdivs = Vector3::new((ground_size.x * 5.) as usize, 0, (ground_size.z * 5.) as usize);
+    let subdivs = Vector3::new((ground_size.x * 10.) as usize, 0, (ground_size.z * 10.) as usize);
     let heights = DMatrix::from_fn(subdivs.x + 1, subdivs.z + 1, |i, j| {
         if i == 0 || i == subdivs.x || j == 0 || j == subdivs.z {
             wall_height
@@ -159,7 +159,7 @@ pub fn create_fluid_above_ground(
     raycast_from: Point3<f32>,
     ground_shape: &dyn Shape,
 ) -> Vec<Point3<f32>> {
-    let fluid_translation = Isometry3::translation(0., height / 2.5, 0.).translation;
+    let fluid_translation = Isometry3::translation(0., 0., 0.).translation;
 
     volume_of_liquid(width,
         length,
@@ -169,7 +169,7 @@ pub fn create_fluid_above_ground(
         |point: &Point3<f32>| {
             // raycast from a point above the ground, if ground is in between,
             // this point is below the ground
-            let ray_vector: Vector3<f32> = raycast_from.clone() - point;
+            let ray_vector: Vector3<f32> = point - raycast_from;
             let ray = Ray::new(raycast_from, ray_vector);
             !ground_shape.intersects_ray(&Isometry3::identity(), &ray, 10000.)
             // true
