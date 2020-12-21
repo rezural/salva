@@ -14,7 +14,7 @@ use nalgebra::{ComplexField, Translation3, DMatrix};
 #[path = "./helper.rs"]
 mod helper;
 
-const PARTICLE_RADIUS: f32 = 0.2;
+const PARTICLE_RADIUS: f32 = 0.1;
 const SMOOTHING_FACTOR: f32 = 2.0;
 
 pub fn init_world(testbed: &mut Testbed) {
@@ -28,7 +28,7 @@ pub fn init_world(testbed: &mut Testbed) {
     let mut fluids_pipeline = FluidsPipeline::new(PARTICLE_RADIUS, SMOOTHING_FACTOR);
 
     let ground_size = Vector3::new(10., 1., 10.);
-    let wall_height = 4.;
+    let wall_height = 1.;
     let (ground_handle, ground_shape) = create_ground(
         ground_size,
         wall_height,
@@ -37,7 +37,7 @@ pub fn init_world(testbed: &mut Testbed) {
         &mut colliders);
 
     let fluid_depth = 4.;
-    let raycast_from = Point3::new(0., ground_size.y * 5., 0.);
+    let raycast_from = Point3::new(0., wall_height, 0.);
     let fluid_particles = create_fluid_above_ground(
         ground_size.x - PARTICLE_RADIUS * 6.,
         ground_size.z- PARTICLE_RADIUS * 6.,
@@ -65,7 +65,7 @@ pub fn init_world(testbed: &mut Testbed) {
     testbed.set_body_wireframe(ground_handle, true);
     testbed.set_world_with_gravity(bodies, colliders, joints, gravity);
     testbed.integration_parameters_mut().set_dt(1.0 / 200.0);
-    testbed.look_at(Point3::new(0., wall_height * 1.3, ground_size.z * 1.3), Point3::origin());
+    testbed.look_at(Point3::new(0., -wall_height * 0.6, ground_size.z), Point3::origin());
 }
 
 // create a cuboid of water
@@ -159,21 +159,21 @@ pub fn create_fluid_above_ground(
     raycast_from: Point3<f32>,
     ground_shape: &dyn Shape,
 ) -> Vec<Point3<f32>> {
-    let fluid_translation = Isometry3::translation(0., height / 2., 0.).translation;
+    let fluid_translation = Isometry3::translation(0., height / 2.5, 0.).translation;
 
     volume_of_liquid(width,
-                            length,
-                            height,
-                            particle_radius,
-                            fluid_translation,
-                            |point: &Point3<f32>| {
-                                // raycast from a point above the ground, if ground is in between,
-                                // this point is below the ground
-                                let ray_vector: Vector3<f32> = raycast_from.clone() - point;
-                                let ray = Ray::new(raycast_from, ray_vector.normalize());
-                                !ground_shape.intersects_ray(&Isometry3::identity(), &ray, 10000.)
-                                // true
-                            })
+        length,
+        height,
+        particle_radius,
+        fluid_translation,
+        |point: &Point3<f32>| {
+            // raycast from a point above the ground, if ground is in between,
+            // this point is below the ground
+            let ray_vector: Vector3<f32> = raycast_from.clone() - point;
+            let ray = Ray::new(raycast_from, ray_vector);
+            !ground_shape.intersects_ray(&Isometry3::identity(), &ray, 10000.)
+            // true
+        })
 
 }
 
