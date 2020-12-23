@@ -14,7 +14,7 @@ use nalgebra::{ComplexField, Translation3, DMatrix};
 #[path = "./helper.rs"]
 mod helper;
 
-const PARTICLE_RADIUS: f32 = 0.06;
+const PARTICLE_RADIUS: f32 = 0.01;
 const SMOOTHING_FACTOR: f32 = 2.0;
 
 pub fn init_world(testbed: &mut Testbed) {
@@ -27,8 +27,8 @@ pub fn init_world(testbed: &mut Testbed) {
     let joints = JointSet::new();
     let mut fluids_pipeline = FluidsPipeline::new(PARTICLE_RADIUS, SMOOTHING_FACTOR);
 
-    let ground_size = Vector3::new(10., 1., 10.);
-    let wall_height = 0.2;
+    let ground_size = Vector3::new(2., 0.2, 2.);
+    let wall_height = 1.0;
     let (ground_handle, ground_shape) = create_ground(
         ground_size,
         wall_height,
@@ -36,18 +36,16 @@ pub fn init_world(testbed: &mut Testbed) {
         &mut bodies,
         &mut colliders);
 
-    let fluid_depth = 2.;
+    let fluid_depth = 0.1;
     let raycast_from = Point3::new(0., wall_height, 0.);
     let fluid_particles = create_fluid_above_ground(
-        ground_size.x - PARTICLE_RADIUS * 6.,
-        ground_size.z- PARTICLE_RADIUS * 6.,
+        ground_size.x - PARTICLE_RADIUS * 6., // remove a few particles width
+        ground_size.z - PARTICLE_RADIUS * 6., // remove a few particles depth
         fluid_depth,
         PARTICLE_RADIUS,
         raycast_from,
         &*ground_shape
     );
-    // let fluid_particles = Vec::new();
-
     let mut fluid = Fluid::new(fluid_particles, PARTICLE_RADIUS, 1000.);
 
     let viscosity = ArtificialViscosity::new(1.0, 0.0);
@@ -118,13 +116,14 @@ pub fn create_ground(
     colliders: &mut ColliderSet,
 ) -> (RigidBodyHandle, ColliderShape) {
 
-    let subdivs = Vector3::new((ground_size.x * 10.) as usize, 0, (ground_size.z * 10.) as usize);
+    let factor = 20.;
+    let subdivs = Vector3::new((ground_size.x * factor) as usize, 0, (ground_size.z * factor) as usize);
     let heights = DMatrix::from_fn(subdivs.x + 1, subdivs.z + 1, |i, j| {
         if i == 0 || i == subdivs.x || j == 0 || j == subdivs.z {
             wall_height
         } else {
-            let x = i as f32 * ground_size.x / (subdivs.x as f32 / 2.);
-            let z = j as f32 * ground_size.z / (subdivs.z as f32 / 2.);
+            let x = i as f32 * ground_size.x / (subdivs.x as f32 / factor);
+            let z = j as f32 * ground_size.z / (subdivs.z as f32 / factor);
 
             // NOTE: make sure we use the sin/cos from simba to ensure
             // cross-platform determinism of the example when the
@@ -155,7 +154,7 @@ pub fn create_fluid_above_ground(
     width: f32,
     length: f32,
     height: f32,
-    particle_radius: f32,
+    particle_rad: f32,
     raycast_from: Point3<f32>,
     ground_shape: &dyn Shape,
 ) -> Vec<Point3<f32>> {
@@ -164,14 +163,14 @@ pub fn create_fluid_above_ground(
     volume_of_liquid(width,
         length,
         height,
-        particle_radius,
+        particle_rad,
         fluid_translation,
         |point: &Point3<f32>| {
             // raycast from a point above the ground, if ground is in between,
             // this point is below the ground
-            let ray_vector: Vector3<f32> = point - raycast_from;
-            let ray = Ray::new(raycast_from, ray_vector);
-            !ground_shape.intersects_ray(&Isometry3::identity(), &ray, 10000.)
+            let ray = Ray::new(point - Vector3::y() * particle_rad, -Vector3::y());
+            ground_shape.intersects_ray(&Isometry3::identity(), &ray, 10000.)
+            // !ground_shape.intersects_ray(&Isometry3::identity(), &ray, 10000.)
             // true
         })
 
